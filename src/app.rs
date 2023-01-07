@@ -1,3 +1,4 @@
+use egui::*;
 use egui_extras::RetainedImage;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -27,28 +28,28 @@ impl Default for TemplateApp {
     }
 }
 
-fn setup_custom_fonts(ctx: &egui::Context) {
+fn setup_custom_fonts(ctx: &Context) {
     // Start with the default fonts (we will be adding to them rather than replacing them).
-    let mut fonts = egui::FontDefinitions::default();
+    let mut fonts = FontDefinitions::default();
 
     // Install my own font (maybe supporting non-latin characters).
     // .ttf and .otf files supported.
     fonts.font_data.insert(
         "chn".to_owned(),
-        egui::FontData::from_static(include_bytes!("../assets/SourceHanSansCN-Regular.otf")),
+        FontData::from_static(include_bytes!("../assets/SourceHanSansCN-Regular.otf")),
     );
 
     // Put my font first (highest priority) for proportional text:
     fonts
         .families
-        .entry(egui::FontFamily::Proportional)
+        .entry(FontFamily::Proportional)
         .or_default()
         .insert(0, "chn".to_owned());
 
     // Put my font as last fallback for monospace:
     fonts
         .families
-        .entry(egui::FontFamily::Monospace)
+        .entry(FontFamily::Monospace)
         .or_default()
         .push("chn".to_owned());
 
@@ -76,7 +77,7 @@ impl TemplateApp {
 impl eframe::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         let Self {
             label,
             value,
@@ -89,9 +90,9 @@ impl eframe::App for TemplateApp {
         // For inspiration and more examples, go to https://emilk.github.io/egui
 
         #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+        TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
-            egui::menu::bar(ui, |ui| {
+            menu::bar(ui, |ui| {
                 ui.menu_button("菜单", |ui| {
                     if ui.button("退出").clicked() {
                         _frame.close();
@@ -100,7 +101,7 @@ impl eframe::App for TemplateApp {
             });
         });
 
-        egui::SidePanel::left("side_panel").show(ctx, |ui| {
+        SidePanel::left("side_panel").show(ctx, |ui| {
             ui.heading("ばんざい！");
 
             ui.horizontal(|ui| {
@@ -108,13 +109,13 @@ impl eframe::App for TemplateApp {
                 ui.text_edit_singleline(label);
             });
 
-            ui.add(egui::Slider::new(value, 0.0..=10.0));
+            ui.add(Slider::new(value, 0.0..=10.0));
 
-            if ui.button(egui::RichText::new("+1").size(32.0)).clicked() {
+            if ui.button(RichText::new("+1").size(32.0)).clicked() {
                 *value += 1.0;
             }
 
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+            ui.with_layout(Layout::bottom_up(Align::LEFT), |ui| {
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 0.0;
                     ui.label("powered by ");
@@ -129,18 +130,18 @@ impl eframe::App for TemplateApp {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
 
             ui.heading("测试");
             ui.hyperlink("https://github.com/RA3CoronaDevelopers");
-            egui::warn_if_debug_build(ui);
+            warn_if_debug_build(ui);
 
-            ui.add(egui::Image::new(image.texture_id(ctx), image.size_vec2()));
+            ui.add(Image::new(image.texture_id(ctx), image.size_vec2()));
         });
 
         if true {
-            egui::Window::new("Window").show(ctx, |ui| {
+            Window::new("Window").show(ctx, |ui| {
                 ui.label(format!(
                     "x: {}, y: {}",
                     image.size_vec2().x,
