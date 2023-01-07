@@ -10,13 +10,15 @@ fn main() {
     tracing_subscriber::fmt::init();
 
     let native_options = eframe::NativeOptions {
-        initial_window_size: Some(vec2(360.0, 520.0)),
+        initial_window_size: Some(vec2(1200.0, 800.0)),
+        min_window_size: Some(vec2(1200.0, 800.0)),
         decorated: false,
         transparent: true,
+        resizable: true,
         ..Default::default()
     };
     eframe::run_native(
-        "eframe template",
+        "Demo",
         native_options,
         Box::new(|cc| Box::new(eframe_template::TemplateApp::new(cc))),
     );

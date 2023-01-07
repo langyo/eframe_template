@@ -75,77 +75,118 @@ impl TemplateApp {
 }
 
 impl eframe::App for TemplateApp {
+    fn clear_color(&self, _visuals: &egui::Visuals) -> egui::Rgba {
+        egui::Rgba::TRANSPARENT // Make sure we don't paint anything behind the rounded corners
+    }
+
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        // Examples of how to create different panels and windows.
-        // Pick whichever suits you.
-        // Tip: a good default choice is to just keep the `CentralPanel`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
+    fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
+        CentralPanel::default()
+            .frame(Frame::none())
+            .show(ctx, |ui| {
+                let rect = ui.max_rect();
+                let painter = ui.painter();
+                const TITLE_HEIGHT: f32 = 32.0;
 
-        #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
-        TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-            menu::bar(ui, |ui| {
-                ui.menu_button("菜单", |ui| {
-                    if ui.button("退出").clicked() {
-                        _frame.close();
+                // Paint the frame:
+                painter.rect(
+                    rect.shrink(1.0),
+                    8.0,
+                    ctx.style().visuals.window_fill(),
+                    Stroke::new(1.0, ctx.style().visuals.text_color()),
+                );
+                painter.text(
+                    rect.center_top() + vec2(0.0, TITLE_HEIGHT / 2.0),
+                    Align2::CENTER_CENTER,
+                    "测试应用",
+                    FontId::proportional(TITLE_HEIGHT * 0.6),
+                    ctx.style().visuals.text_color(),
+                );
+
+                let title_bar_rect = {
+                    let mut rect = rect;
+                    rect.max.y = rect.min.y + TITLE_HEIGHT;
+                    rect
+                };
+                let title_bar_response =
+                    ui.interact(title_bar_rect, Id::new("title_bar"), Sense::click());
+                if title_bar_response.is_pointer_button_down_on() {
+                    frame.drag_window();
+                }
+
+                let content_rect = {
+                    let mut rect = rect;
+                    rect.min.y = title_bar_rect.max.y;
+                    rect
+                }
+                .shrink(4.0);
+                let mut content_ui = ui.child_ui(content_rect, *ui.layout());
+
+                #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
+                TopBottomPanel::top("top_panel").show_inside(&mut content_ui, |ui| {
+                    ui.horizontal(|ui| {
+                        // The top panel is often a good place for a menu bar:
+                        menu::bar(ui, |ui| {
+                            ui.menu_button("菜单", |ui| {
+                                if ui.button("退出").clicked() {
+                                    frame.close();
+                                }
+                            });
+                        });
+                    });
+                });
+
+                SidePanel::left("side_panel").show_inside(&mut content_ui, |ui| {
+                    ui.heading("ばんざい！");
+
+                    ui.horizontal(|ui| {
+                        ui.label("输入测试：");
+                        ui.text_edit_singleline(&mut self.label);
+                    });
+
+                    ui.add(Slider::new(&mut self.value, 0.0..=10.0));
+
+                    if ui.button(RichText::new("+1").size(32.0)).clicked() {
+                        self.value += 1.0;
                     }
+
+                    ui.with_layout(Layout::bottom_up(Align::LEFT), |ui| {
+                        ui.horizontal(|ui| {
+                            ui.spacing_mut().item_spacing.x = 0.0;
+                            ui.label("powered by ");
+                            ui.hyperlink_to("egui", "https://github.com/emilk/egui");
+                            ui.label(" and ");
+                            ui.hyperlink_to(
+                                "eframe",
+                                "https://github.com/emilk/egui/tree/master/crates/eframe",
+                            );
+                            ui.label(".");
+                        });
+                    });
+                });
+
+                CentralPanel::default().show_inside(&mut content_ui, |ui| {
+                    // The central panel the region left after adding TopPanel's and SidePanel's
+
+                    ui.heading("测试");
+                    ui.hyperlink("https://github.com/RA3CoronaDevelopers");
+                    warn_if_debug_build(ui);
+
+                    ui.add(Image::new(
+                        self.image.texture_id(ctx),
+                        self.image.size_vec2(),
+                    ));
+                });
+
+                Window::new("Window").show(content_ui.ctx(), |ui| {
+                    ui.label(format!(
+                        "x: {}, y: {}",
+                        self.image.size_vec2().x,
+                        self.image.size_vec2().y
+                    ));
                 });
             });
-        });
-
-        SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("ばんざい！");
-
-            ui.horizontal(|ui| {
-                ui.label("输入测试：");
-                ui.text_edit_singleline(&mut self.label);
-            });
-
-            ui.add(Slider::new(&mut self.value, 0.0..=10.0));
-
-            if ui.button(RichText::new("+1").size(32.0)).clicked() {
-                self.value += 1.0;
-            }
-
-            ui.with_layout(Layout::bottom_up(Align::LEFT), |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = 0.0;
-                    ui.label("powered by ");
-                    ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-                    ui.label(" and ");
-                    ui.hyperlink_to(
-                        "eframe",
-                        "https://github.com/emilk/egui/tree/master/crates/eframe",
-                    );
-                    ui.label(".");
-                });
-            });
-        });
-
-        CentralPanel::default().show(ctx, |ui| {
-            // The central panel the region left after adding TopPanel's and SidePanel's
-
-            ui.heading("测试");
-            ui.hyperlink("https://github.com/RA3CoronaDevelopers");
-            warn_if_debug_build(ui);
-
-            ui.add(Image::new(
-                self.image.texture_id(ctx),
-                self.image.size_vec2(),
-            ));
-        });
-
-        if true {
-            Window::new("Window").show(ctx, |ui| {
-                ui.label(format!(
-                    "x: {}, y: {}",
-                    self.image.size_vec2().x,
-                    self.image.size_vec2().y
-                ));
-            });
-        }
     }
 
     /// Called by the frame work to save state before shutdown.
