@@ -78,12 +78,6 @@ impl eframe::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        let Self {
-            label,
-            value,
-            image,
-        } = self;
-
         // Examples of how to create different panels and windows.
         // Pick whichever suits you.
         // Tip: a good default choice is to just keep the `CentralPanel`.
@@ -106,13 +100,13 @@ impl eframe::App for TemplateApp {
 
             ui.horizontal(|ui| {
                 ui.label("输入测试：");
-                ui.text_edit_singleline(label);
+                ui.text_edit_singleline(&mut self.label);
             });
 
-            ui.add(Slider::new(value, 0.0..=10.0));
+            ui.add(Slider::new(&mut self.value, 0.0..=10.0));
 
             if ui.button(RichText::new("+1").size(32.0)).clicked() {
-                *value += 1.0;
+                self.value += 1.0;
             }
 
             ui.with_layout(Layout::bottom_up(Align::LEFT), |ui| {
@@ -137,15 +131,18 @@ impl eframe::App for TemplateApp {
             ui.hyperlink("https://github.com/RA3CoronaDevelopers");
             warn_if_debug_build(ui);
 
-            ui.add(Image::new(image.texture_id(ctx), image.size_vec2()));
+            ui.add(Image::new(
+                self.image.texture_id(ctx),
+                self.image.size_vec2(),
+            ));
         });
 
         if true {
             Window::new("Window").show(ctx, |ui| {
                 ui.label(format!(
                     "x: {}, y: {}",
-                    image.size_vec2().x,
-                    image.size_vec2().y
+                    self.image.size_vec2().x,
+                    self.image.size_vec2().y
                 ));
             });
         }
