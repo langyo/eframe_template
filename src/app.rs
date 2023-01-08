@@ -89,7 +89,8 @@ impl eframe::App for TemplateApp {
                 let painter = ui.painter();
                 const TITLE_HEIGHT: f32 = 32.0;
 
-                // Paint the frame:
+                // Paint the frame background
+                #[cfg(not(target_arch = "wasm32"))]
                 painter.rect(
                     rect.shrink(1.0),
                     8.0,
@@ -109,10 +110,14 @@ impl eframe::App for TemplateApp {
                     rect.max.y = rect.min.y + TITLE_HEIGHT;
                     rect
                 };
-                let title_bar_response =
-                    ui.interact(title_bar_rect, Id::new("title_bar"), Sense::click());
-                if title_bar_response.is_pointer_button_down_on() {
-                    frame.drag_window();
+
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    let title_bar_response =
+                        ui.interact(title_bar_rect, Id::new("title_bar"), Sense::click());
+                    if title_bar_response.is_pointer_button_down_on() {
+                        frame.drag_window();
+                    }
                 }
 
                 let content_rect = {
@@ -123,7 +128,7 @@ impl eframe::App for TemplateApp {
                 .shrink(4.0);
                 let mut content_ui = ui.child_ui(content_rect, *ui.layout());
 
-                #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
+                #[cfg(not(target_arch = "wasm32"))]
                 TopBottomPanel::top("top_panel").show_inside(&mut content_ui, |ui| {
                     ui.horizontal(|ui| {
                         // The top panel is often a good place for a menu bar:
